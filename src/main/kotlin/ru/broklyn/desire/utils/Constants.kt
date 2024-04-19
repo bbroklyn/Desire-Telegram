@@ -28,4 +28,6 @@ object Constants {
         get() = dotenv["DB_PASSWORD"]
     val TELEGRAM_ID: String?
         get() = dotenv["TELEGRAM_ID"]
+    val DB_URL: String
+        get() = dotenv["DB_URL"]
 }

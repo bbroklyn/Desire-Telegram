@@ -9,12 +9,6 @@ import org.ktorm.schema.varchar
 interface IMembersList : Entity<IMembersList> {
     val id: Int
     var userid:  IMembersInfo?
-    val file_name: String
-    val file_link: String
-    val file_size: String
-    val file_publicurl: String?
-    val file_created: Long
-    val file_modified: Long
 }
 
 object MembersList : Table<IMembersList>("memberslist") {

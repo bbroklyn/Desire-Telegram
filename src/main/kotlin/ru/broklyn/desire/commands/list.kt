@@ -30,6 +30,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 
+// TODO: Реализовать страницы.
 @OptIn(RiskFeature::class)
 @PreviewFeature
 suspend fun BehaviourContext.list() {
@@ -100,7 +101,7 @@ suspend fun BehaviourContext.list() {
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")
                 val registerTimeInstant: Instant = OffsetDateTime.parse(selectedFile.created, formatter).toInstant()
                 val modifiedTimeInstant: Instant = OffsetDateTime.parse(selectedFile.modified, formatter).toInstant()
-
+                println(file.toString())
                 addOrUpdateList(userChatId.toString(), resourceId, name, "file", publicURL, size.toInt(), registerTimeInstant,modifiedTimeInstant)
 
                 reply(message, "Данные о файле: $name\n<a href=\"$file\">Ссылка для скачивания (нажми на меня)</a>",
@@ -129,7 +130,7 @@ suspend fun BehaviourContext.list() {
                 answerCallbackQuery(callback.id, "Дата последнего редактирования: ${getListResources?.fileModified}", showAlert = true)
             }
             "pageBack" -> {
-                println("назад")
+                println("pageBack")
             }
             "pageHome" -> {
                 println("pageHome")
