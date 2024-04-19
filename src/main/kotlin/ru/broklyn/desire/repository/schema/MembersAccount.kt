@@ -6,16 +6,6 @@ import org.ktorm.schema.*
 interface IMembersAccount : Entity<IMembersAccount> {
     val id: Int
     var userid: IMembersInfo
-    var display_name: String
-    var paid: String
-    var uid: Int
-    var login: String
-    var country: String
-    var register_time: Long
-    var total_size: Int
-    var used_size: Int
-    var free_size: Int
-
 }
 
 

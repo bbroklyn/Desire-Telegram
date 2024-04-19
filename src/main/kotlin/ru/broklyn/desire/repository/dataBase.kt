@@ -9,66 +9,52 @@ import org.ktorm.support.postgresql.insertOrUpdate
 import ru.broklyn.desire.repository.schema.MembersAccount
 import ru.broklyn.desire.repository.schema.MembersInfo
 import ru.broklyn.desire.repository.schema.MembersList
-import ru.broklyn.desire.repository.schema.MembersTicket
 import ru.broklyn.desire.utils.Constants
 import ru.broklyn.desire.utils.logger
 import java.time.Instant
 
-
 val database = Database.connect(
-    url = "jdbc:postgresql://193.164.16.29/desire",
+    url = Constants.DB_URL,
     user = Constants.DB_USERNAME,
     password = Constants.DB_PASSWORD,
-    logger = ConsoleLogger(threshold = LogLevel.INFO)
+    logger = ConsoleLogger(threshold = LogLevel.WARN)
 )
 
 
 object DatabaseConnector {
 
-    fun getConnection(): String{
-        try {
+    fun getConnection(): Boolean {
+        return try {
             database.useConnection {
-                val listArray = ArrayList<String>()
-                val infoArray = ArrayList<String>()
-                val accountArray = ArrayList<String>()
-                val ticketArray = ArrayList<String>()
-                for (row in database.from(MembersInfo).select()) {
-                    infoArray.add(row.toString())
-                }
-                for (row in database.from(MembersAccount).select()) {
-                    accountArray.add(row.toString())
-                }
-                for (row in database.from(MembersTicket).select()) {
-                    ticketArray.add(row.toString())
-                }
-                return "База данных успешно подключена! Информация о количестве юзеров: \nMembersInfo: ${infoArray.size}\nMembersAccount: ${accountArray.size}\nMembersTicket: ${ticketArray.size}\nMembersList: ${listArray.size}"
+                true
             }
         } catch (e: Exception) {
-            logger.warn{" (dataBase.kt) -> Не удалось подключиться к БД: ${e.message}"}
-            return "Не удалось подключиться к БД: ${e.message}"
+            logger.warn { "Не удалось подключиться к БД: ${e.message}" }
+            false
         }
     }
 }
 
+
 object DataBaseChanges {
 
     fun checkIfUserExists(userid: String): Boolean {
-        for (row in database.from(MembersInfo).select()) {
+        for (row in database.from(MembersInfo).select(MembersInfo.userid)) {
             if (row[MembersInfo.userid] == userid)
                 return true
         }
         return false
     }
 
-    fun getUserId(userid: String): String {
-        for (row in database.from(MembersInfo).select()) {
-            if (row[MembersInfo.userid] == userid) {
-                return userid
+    fun getUserId   (userid: String): String? {
+        for (row in database.from(MembersInfo).select(MembersInfo.userid)) {
+            return if (row[MembersInfo.userid] == userid) {
+                userid
             } else {
-                return "Нет пользователя с таким userid"
+                return null
             }
         }
-        return "Не удалось начать поиск."
+        return null
     }
 
     fun addOrUpdateMember(userid: String, token: String) {
@@ -82,11 +68,11 @@ object DataBaseChanges {
     }
 
     fun getTokenFromDatabase(userChatId: String): String? {
-        for (row in database.from(MembersInfo).select()) {
+        for (row in database.from(MembersInfo).select(MembersInfo.userid, MembersInfo.token)) {
             if (row[MembersInfo.userid] == userChatId)
                 return row[MembersInfo.token]
         }
-        return "empty answer or request"
+        return null
     }
 
     fun addOrUpdateAccount(userid: String, displayName: String, paid: String, uid: Int, login: String, country: String, registerTime: Instant, totalSize: Int, usedSize: Int, freeSize: Int) {
@@ -145,46 +131,13 @@ object DataBaseChanges {
         return null
     }
 
-    fun deleteTokenFromDB(userId: Long): String {
+    fun deleteTokenFromDB(userId: Long): Boolean {
         val affectedRows = database.delete(MembersInfo) {
             MembersInfo.userid eq userId.toString()
         }
-        return if (affectedRows > 0) {
-            "Удаление успешно!"
-        } else {
-            "Удаление невозможно, так как пользователя с данным userId не существует."
-        }
+        return affectedRows > 0
     }
 
-    fun addTicket(userId: String, userName: String, ticketReason: String, ticketText: String): Int {
-        return database.insertOrUpdate(MembersTicket) {
-            set(it.userid, userId)
-            set(it.user_name, userName)
-            set(it.ticket_reason, ticketReason)
-            set(it.ticket_text, ticketText)
-            onConflict(it.userid) {
-                doNothing()
-            }
-        }
-    }
-    fun deleteTicket(userId: String): String {
-        val affectedRows = database.delete(MembersTicket) {
-            MembersTicket.userid eq userId
-        }
-        return if (affectedRows > 0) {
-            "Удаление успешно!"
-        } else {
-            "Удаление невозможно, так как пользователя с данным userId не существует."
-        }
-    }
-
-    fun checkIfTicketExists(userid: String): Boolean {
-        for (row in database.from(MembersTicket).select()) {
-            if (row[MembersTicket.userid] == userid)
-                return true
-        }
-        return false
-    }
 
     fun addOrUpdateList(userId: String, resourceId: String, fileName: String, fileLink: String, filePublicUrl: String, fileSize: Int, fileCreated: Instant, fileModified: Instant) {
         database.insertOrUpdate(MembersList) {
@@ -241,21 +194,17 @@ object DataBaseChanges {
     }
 
     fun getResourceIdFromDatabase(userid: String): String? {
-        for (row in database.from(MembersList).select()) {
+        for (row in database.from(MembersList).select(MembersList.userid, MembersList.resource_id)) {
             if (row[MembersList.userid] == userid)
                 return row[MembersList.resource_id]
         }
-        return "empty answer or request"
+        return null
     }
 
-    fun deleteListFromDB(userId: Long): String {
+    fun deleteListFromDB(userId: Long): Boolean {
         val affectedRows = database.delete(MembersList) {
             MembersList.userid eq userId.toString()
         }
-        return if (affectedRows > 0) {
-            "Удаление успешно!"
-        } else {
-            "Удаление невозможно, так как пользователя с данным userId не существует."
-        }
+        return affectedRows > 0
     }
 }

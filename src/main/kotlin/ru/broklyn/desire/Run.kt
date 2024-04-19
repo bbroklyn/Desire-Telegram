@@ -9,15 +9,17 @@ import dev.inmo.tgbotapi.types.BotCommand
 import dev.inmo.tgbotapi.utils.PreviewFeature
 import ru.broklyn.desire.commands.*
 import ru.broklyn.desire.api.telegram.validateTelegramToken
+import ru.broklyn.desire.repository.DatabaseConnector
 import ru.broklyn.desire.utils.*
 
 @OptIn(PreviewFeature::class)
 suspend fun main() {
     // Проверка Телеграм-Токена
-    if (!validateTelegramToken(Constants.TELEGRAM_TOKEN)) {
-        logger.warn {" Неверный Telegram Токен! "}
+    if (!validateTelegramToken(Constants.TELEGRAM_TOKEN) || !DatabaseConnector.getConnection()) {
+        logger.warn {" Не удалось начать работу с ботом, проверьте Телеграм-Токен и БД. "}
         return
     }
+
 
     // ДС токен
     val bot = telegramBot(Constants.TELEGRAM_TOKEN)
@@ -32,7 +34,6 @@ suspend fun main() {
             BotCommand("token", "Получение токена Яндекс Диска."),
             BotCommand("trash", "Очистка корзины."),
             BotCommand("account", "Некоторая информация о диске пользователя."),
-            BotCommand("ticket", "Создание тикета."),
             BotCommand("list", "Просмотр файлов на диске, скачивание, загрузка и редактирование.")
 
         )
@@ -43,6 +44,5 @@ suspend fun main() {
         list()
         trash()
         account()
-        ticket()
     }.join()
 }
